@@ -1,5 +1,4 @@
 from copy import copy, deepcopy
-from json.encoder import INFINITY
 from typing import Tuple
 import gym
 import random
@@ -11,7 +10,7 @@ import helper
 from gym_connect_four import ConnectFourEnv
 
 env: ConnectFourEnv = gym.make("ConnectFour-v0")
-eval_table = helper.score_table()
+INFINITY = 100000
 
 #SERVER_ADRESS = "http://localhost:8000/"
 SERVER_ADRESS = "https://vilde.cs.lth.se/edap01-4inarow/"
@@ -67,21 +66,21 @@ def update(board, move, player):
 def minimax(board, depth, alpha, beta, maximizingPlayer) -> Tuple[int, int]:
     if helper.is_win_state(board):
         value = -300 if maximizingPlayer else 300
-        # print(depth, -1, value)
         return (None, value)
+
     elif depth == 0:
         value = helper.eval_score(board, maximizingPlayer)
         assert(value is not None)
-        # print(depth, -1, value)
+
         return (None, value)
 
-    moves = env.available_moves()
+    moves = helper.available_moves(board)
     taken = 0
 
     if maximizingPlayer:
         maxValue = -INFINITY
         for move in moves:
-            new_board = update(deepcopy(board), move, 1)
+            new_board = update(copy(board), move, 1)
             value = minimax(new_board, depth - 1, alpha, beta, False)[1]
             if value > maxValue:
                 maxValue = value
@@ -96,7 +95,7 @@ def minimax(board, depth, alpha, beta, maximizingPlayer) -> Tuple[int, int]:
     else:
         minValue = INFINITY
         for move in moves:
-            new_board = update(deepcopy(board), move, -1)
+            new_board = update(copy(board), move, -1)
             value = minimax(new_board, depth - 1, alpha, beta, True)[1]
             if value < minValue:
                 minValue = value
@@ -116,11 +115,8 @@ def opponents_move(env):
         env.change_player()  # change back to student before returning
         return -1
 
-    # TODO: Optional? change this to select actions with your policy too
-    # that way you get way more interesting games, and you can see if starting
-    # is enough to guarrantee a win
     # action = random.choice(list(avmoves))
-    action = minimax(env.board, 2, -INFINITY, INFINITY, False)[0]
+    action = minimax(env.board, 5, -INFINITY, INFINITY, False)[0]
 
     state, reward, done, _ = env.step(action)
     if done:
@@ -130,15 +126,10 @@ def opponents_move(env):
     return state, reward, done
 
 
-def student_move():
-    """
-    TODO: Implement your min-max alpha-beta pruning algorithm here.
-    Give it whatever input arguments you think are necessary
-    (and change where it is called).
-    The function should return a move from 0-6
-    """
-    print("Student's move")
-    return minimax(env.board, 2, -INFINITY, INFINITY, True)[0]
+def student_move(board):
+    (move, score) = minimax(board, 2, -INFINITY, INFINITY, True)
+    print(f"Student muves in column {move}, evaluated score: {score}")
+    return move
 
 
 def play_game(vs_server=False):
@@ -186,7 +177,7 @@ def play_game(vs_server=False):
     done = False
     while not done:
         # Select your move
-        stmove = student_move()  # TODO: change input here
+        stmove = student_move(state)  # TODO: change input here
 
         # make both student and bot/server moves
         if vs_server:
