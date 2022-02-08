@@ -1,4 +1,4 @@
-MAIN=skeleton.py
+MAIN=connect4.py
 
 local:
 	python3 $(MAIN) --local

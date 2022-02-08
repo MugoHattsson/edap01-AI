@@ -1,11 +1,11 @@
-from copy import copy, deepcopy
+from copy import copy
 from typing import Tuple
-import gym
 import random
-import requests
-import numpy as np
 import argparse
 import sys
+import gym
+import requests
+import numpy as np
 import helper
 from gym_connect_four import ConnectFourEnv
 
@@ -15,7 +15,7 @@ INFINITY = 100000
 #SERVER_ADRESS = "http://localhost:8000/"
 SERVER_ADRESS = "https://vilde.cs.lth.se/edap01-4inarow/"
 API_KEY = 'nyckel'
-STIL_ID = ["hu5174ma-s"]  # TODO: fill this list with your stil-id's
+STIL_ID = ["hu5174ma-s"]
 
 
 def call_server(move):
@@ -27,12 +27,12 @@ def call_server(move):
                         })
     # For safety some respose checking is done here
     if res.status_code != 200:
-        print("Server gave a bad response, error code={}".format(res.status_code))
-        exit()
+        print(f"Server gave a bad response, error code={res.status_code}")
+        sys.exit()
     if not res.json()['status']:
         print("Server returned a bad status. Return message: ")
         print(res.json()['msg'])
-        exit()
+        sys.exit()
     return res
 
 
@@ -47,15 +47,6 @@ def check_stats():
     return stats
 
 
-"""
-You can make your code work against this simple random agent
-before playing against the server.
-It returns a move 0-6 or -1 if it could not make a move.
-To check your code for better performance, change this code to
-use your own algorithm for selecting actions too
-"""
-
-
 def update(board, move, player):
     column = board[:, move]
     board[np.where(column == 0)[0][-1]][move] = player
@@ -63,48 +54,46 @@ def update(board, move, player):
     return board
 
 
-def minimax(board, depth, alpha, beta, maximizingPlayer) -> Tuple[int, int]:
+def minimax(board, depth, alpha, beta, maximizing_player) -> Tuple[int, int]:
     if helper.is_win_state(board):
-        value = -300 if maximizingPlayer else 300
+        value = -300 if maximizing_player else 300
         return (None, value)
 
-    elif depth == 0:
-        value = helper.eval_score(board, maximizingPlayer)
-        assert(value is not None)
+    if depth == 0:
+        value = helper.eval_score(board, maximizing_player)
 
         return (None, value)
 
     moves = helper.available_moves(board)
     taken = 0
 
-    if maximizingPlayer:
-        maxValue = -INFINITY
+    if maximizing_player:
+        max_value = -INFINITY
         for move in moves:
             new_board = update(copy(board), move, 1)
             value = minimax(new_board, depth - 1, alpha, beta, False)[1]
-            if value > maxValue:
-                maxValue = value
+            if value > max_value:
+                max_value = value
                 taken = move
             alpha = max(alpha, value)
             if beta <= alpha:
                 break
 
-        # print(depth, taken, maxValue)
-        return (taken, maxValue)
+        return (taken, max_value)
 
     else:
-        minValue = INFINITY
+        min_value = INFINITY
         for move in moves:
             new_board = update(copy(board), move, -1)
             value = minimax(new_board, depth - 1, alpha, beta, True)[1]
-            if value < minValue:
-                minValue = value
+            if value < min_value:
+                min_value = value
                 taken = move
             beta = min(beta, value)
             if beta <= alpha:
                 break
-        # print(depth, taken, minValue)
-        return (move, minValue)
+
+        return (taken, min_value)
 
 
 def opponents_move(env):
@@ -177,7 +166,7 @@ def play_game(vs_server=False):
     done = False
     while not done:
         # Select your move
-        stmove = student_move(state)  # TODO: change input here
+        stmove = student_move(state)
 
         # make both student and bot/server moves
         if vs_server:
@@ -220,7 +209,7 @@ def play_game(vs_server=False):
             elif result == -10:
                 print("You made an illegal move and have lost!")
             else:
-                print("Unexpected result result={}".format(result))
+                print(f"Unexpected result result={result}")
             if not vs_server:
                 print("Final state (1 are student discs, -1 are servers, 0 is empty): ")
         else:
@@ -256,10 +245,6 @@ def main():
     if args.stats:
         stats = check_stats()
         print(stats)
-
-    # TODO: Run program with "--online" when you are ready to play against the server
-    # the results of your games there will be logged
-    # you can check your stats bu running the program with "--stats"
 
 
 if __name__ == "__main__":
