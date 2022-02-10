@@ -61,8 +61,8 @@ def eval_score(board, player):
         for j in range(cols):
             if board[i][j] == player:
                 score -= abs(3-j)
-            # elif board[i][j] == player*(-1):
-            #     score += abs(3-j)
+            elif board[i][j] == player*(-1):
+                score += abs(3-j)
 
     return score
 

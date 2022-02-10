@@ -60,7 +60,7 @@ def minimax(board, depth, alpha, beta, maximizing_player) -> Tuple[int, int]:
         return (None, value)
 
     if depth == 0:
-        value = helper.eval_score(board, maximizing_player)
+        value = helper.eval_score(board, 1 if maximizing_player else -1)
 
         return (None, value)
 
@@ -117,7 +117,7 @@ def opponents_move(env):
 
 def student_move(board):
     (move, score) = minimax(board, 2, -INFINITY, INFINITY, True)
-    print(f"Student muves in column {move}, evaluated score: {score}")
+    print(f"Student moves in column {move}, evaluated score: {score}")
     return move
 
 
